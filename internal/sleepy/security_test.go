@@ -44,7 +44,7 @@ func TestDeviceSecretOnlyReports(t *testing.T) {
 	s := secApp(t, func(c *Config) { c.Main.DeviceSecret = "device-secret-long-enough" })
 	requireCode(t, do(s, "POST", "/api/device/set", "device-secret-long-enough", `{"id":"pc","show_name":"PC","using":true}`), 200)
 	requireCode(t, do(s, "GET", "/device/set?secret=device-secret-long-enough&id=ipad&show_name=iPad&using=true", "", ""), 200)
-	for _, path := range []string{"/api/status/set?status=1", "/api/device/clear", "/api/device/private?private=true", "/admin/data"} {
+	for _, path := range []string{"/api/status/set?status=1", "/api/device/clear", "/api/device/private?private=true", "/api/device/order", "/admin/data"} {
 		method := "POST"
 		if path == "/admin/data" {
 			method = "GET"

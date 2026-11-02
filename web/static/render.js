@@ -138,23 +138,8 @@ export function parseApp(raw) {
     app = app.replace(/\s+/g, ' ').replace(/^[\s\-|·•,，]+|[\s\-|·•,，]+$/g, '').trim();
     return { app, battery, music };
 }
-function clockOf(now, tz) {
-    const opt = { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' };
-    let time;
-    let zone = '';
-    try {
-        time = new Date(now).toLocaleTimeString(lang, { ...opt, timeZone: tz || undefined });
-        for (const style of ['shortGeneric', 'short']) {
-            try {
-                const p = new Intl.DateTimeFormat(lang, { timeZone: tz || undefined, timeZoneName: style }).formatToParts(now);
-                zone = (p.find((x) => x.type === 'timeZoneName') || {}).value || '';
-                if (zone) break;
-            } catch (e) {}
-        }
-    } catch (e) {
-        time = new Date(now).toLocaleTimeString(lang, opt);
-    }
-    return { time, zone };
+function clockOf(now) {
+    return new Date(now).toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
 }
 
 // pick an outline icon from the device name / id
@@ -193,14 +178,17 @@ export function buildView({ data, meta, overrides, moreText = '', now = Date.now
         last_ago: ago(lastTs, now, t),
         last_device: latest ? latest.show_name : '',
         updated_ago: ago(data.last_updated, now, t),
-        time: clockOf(now, meta && meta.timezone).time
+        time: clockOf(now)
     };
     base.device = using[0] ? using[0].show_name : '';
     base.app = first.app;
     base.ago = using[0] ? ago(using[0].last_updated, now, t) : '';
     const sid = String(status.id);
     const s = text.status;
-    const devices = using.map((d) => {
+    // the admin's order wins; unranked devices follow, newest first
+    const rank = new Map((data.order || []).map((id, i) => [id, i]));
+    const listed = [...using].sort((a, b) => (rank.get(a.id) ?? Infinity) - (rank.get(b.id) ?? Infinity) || 0);
+    const devices = listed.map((d) => {
         const parsed = parseApp(d.status);
         const vars = {
             ...base,
@@ -231,7 +219,7 @@ export function buildView({ data, meta, overrides, moreText = '', now = Date.now
         devices,
         idle: devices.length ? '' : fill(pick(s.idle, `${sid}.idle`), base),
         updated: fill(text.page.updated, base),
-        clock: clockOf(now, meta && meta.timezone),
+        clock: clockOf(now),
         footer: text.page.footer ?? moreText ?? '',
         conn: {
             live: text.page.live,
@@ -290,8 +278,7 @@ export function render(root, view, conn = { state: 'live' }) {
         r.foot = el('footer', 'sl-foot');
         r.clock = el('span', 'sl-clock');
         r.time = el('span', 'sl-time');
-        r.zone = el('span', 'sl-zone');
-        r.clock.append(r.time, r.zone);
+        r.clock.append(r.time);
         r.updated = el('span', 'sl-updated');
         r.conn = el('span', 'sl-conn');
         const right = el('span', 'sl-foot-r');
@@ -336,10 +323,7 @@ export function render(root, view, conn = { state: 'live' }) {
     r.list.hidden = !view.devices.length;
     setText(r.idle, view.idle);
     r.idle.hidden = !view.idle;
-    const clock = view.clock || { time: '', zone: '' };
-    r.time.textContent = clock.time;
-    r.zone.textContent = clock.zone;
-    r.zone.hidden = !clock.zone;
+    r.time.textContent = view.clock || '';
     r.updated.textContent = view.updated;
     const state = conn.state || 'live';
     r.conn.dataset.state = state;

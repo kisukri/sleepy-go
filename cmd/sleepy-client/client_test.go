@@ -112,6 +112,22 @@ func TestBatteryAndAppFirst(t *testing.T) {
 	}
 }
 
+func TestAppOnly(t *testing.T) {
+	c, fs, srv, _ := setup(t, func(c *Config) { c.AppOnly = true })
+	fs.s = Sample{Title: "Secret plans - Personal - Microsoft Edge", App: "Microsoft Edge"}
+	c.Tick(context.Background())
+	fs.s.Title = "Another tab - Personal - Microsoft Edge"
+	c.Tick(context.Background())
+	if len(srv.got) != 1 || srv.got[0]["status"] != "Microsoft Edge" {
+		t.Fatalf("got %v", srv.got)
+	}
+	fs.s = Sample{Title: "notes.txt - Notepad"} // name unknown, fall back to the title's tail
+	c.Tick(context.Background())
+	if srv.got[1]["status"] != "Notepad" {
+		t.Fatalf("got %v", srv.got[1]["status"])
+	}
+}
+
 func TestRetryAfterServerError(t *testing.T) {
 	c, fs, srv, _ := setup(t, nil)
 	srv.status = 500

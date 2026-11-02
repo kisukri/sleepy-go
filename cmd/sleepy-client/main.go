@@ -44,6 +44,9 @@ battery = true
 # "file.txt - Notepad" -> "Notepad - file.txt"
 app_first = false
 
+# Send only the program name ("Microsoft Edge") instead of the window title
+app_only = false
+
 # Extra window titles to ignore (the last title stays)
 skip_titles = []
 

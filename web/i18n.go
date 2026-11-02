@@ -64,6 +64,9 @@ var words = map[string][3]string{
 	"confirm_delete": {"もう一度押すと削除します", "再点一次确认删除", "Tap again to remove"},
 	"deleted":        {"削除しました", "已删除", "Removed"},
 	"delete_failed":  {"削除できませんでした：{err}", "删除失败：{err}", "Couldn't remove: {err}"},
+	"move_up":        {"{name} を上へ", "上移 {name}", "Move {name} up"},
+	"move_down":      {"{name} を下へ", "下移 {name}", "Move {name} down"},
+	"order_failed":   {"並べ替えできませんでした：{err}", "调整顺序失败：{err}", "Couldn't reorder: {err}"},
 
 	// editor: variables shown as 【label】
 	"v_name":        {"名前", "名字", "name"},

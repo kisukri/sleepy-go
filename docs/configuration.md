@@ -19,7 +19,7 @@
 | `main.secret` | `sleepy_main_secret` | 必須。空にはできません |
 | `main.host` | `sleepy_main_host` | `127.0.0.1`。Docker イメージでは `0.0.0.0` |
 | `main.port` | `sleepy_main_port` | `9010` |
-| `main.timezone` | `sleepy_main_timezone` | `Asia/Shanghai` |
+| `main.timezone` | `sleepy_main_timezone` | `Asia/Shanghai`。旧 API（`/query`）の時刻に使います。ページの時計は閲覧者の端末の時刻です |
 | `main.database` | `sleepy_main_database` | データディレクトリ内の `data.db`。SQLite のみ対応 |
 | `main.cache_age` | `sleepy_main_cache_age` | `1200` 秒。フロントエンドのファイルをキャッシュする時間 |
 | `main.cors_origins` | `sleepy_main_cors_origins` | `*`。オリジンのリストも指定できます |

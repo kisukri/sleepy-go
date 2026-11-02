@@ -21,6 +21,7 @@ type Config struct {
 	IdleMinutes      int      `toml:"idle_minutes"`
 	Battery          bool     `toml:"battery"`
 	AppFirst         bool     `toml:"app_first"`
+	AppOnly          bool     `toml:"app_only"`
 	SkipTitles       []string `toml:"skip_titles"`
 	NotUsingTitles   []string `toml:"not_using_titles"`
 }
@@ -71,6 +72,7 @@ type Battery struct {
 
 type Sample struct {
 	Title   string
+	App     string // program name of the foreground window, may be empty
 	Idle    time.Duration
 	Battery *Battery
 }
@@ -117,7 +119,13 @@ func (c *Client) decide(s Sample) (report, bool) {
 	if c.skip[title] {
 		return report{}, false
 	}
-	if c.cfg.AppFirst && strings.Contains(title, " - ") {
+	if c.cfg.AppOnly {
+		if s.App != "" {
+			title = s.App
+		} else if i := strings.LastIndex(title, " - "); i >= 0 {
+			title = title[i+3:] // "page - Microsoft Edge": the app is usually last
+		}
+	} else if c.cfg.AppFirst && strings.Contains(title, " - ") {
 		parts := strings.Split(title, " - ")
 		for i, j := 0, len(parts)-1; i < j; i, j = i+1, j-1 {
 			parts[i], parts[j] = parts[j], parts[i]

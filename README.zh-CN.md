@@ -6,7 +6,7 @@
 
 ## 功能
 
-- **状态展示**：留白为主的简约页面，显示手动状态、正在使用的设备、应用、电量、音乐和你那边的当地时间；浅色 / 深色可以用按钮切换。
+- **状态展示**：留白为主的简约页面，显示手动状态、正在使用的设备、应用、电量、音乐，以及访客自己的本地时间；设备显示顺序可以在后台调整；浅色 / 深色可以用按钮切换。
 - **日文、中文、英文**：用 `page.language` 选择界面语言（默认日文，设为 `zh` 即为中文）。
 - **实时更新**：SSE 推送，断线自动重连，手机切回页面立即刷新。
 - **管理后台**：切换状态、管理设备、隐私模式；点击首页预览里的文字即可修改文案，支持随机文案与变量。
@@ -113,6 +113,50 @@ cp configs/config.example.yaml data/config.yaml
 客户端说明见 [`clients/`](clients/README.md)（日文）：Windows 推荐用 Go 版客户端（一个 exe，不需要 Python，支持窗口、空闲、电量和定时心跳），另有 Python 版、PowerShell 版，以及 Linux（KDE、Hyprland）脚本；iOS/iPadOS 可用快捷指令。填写服务地址、密钥、设备 ID 和显示名称即可上报。
 
 新客户端建议用 `Authorization: Bearer <密钥>` 并发送 JSON POST 到 `/api/device/set`。接口说明见 [API 文档](docs/api.md)（日文）。
+
+下面两种客户端的“密钥”，设置了 `main.device_secret` 就填它，否则填 `main.secret`（也就是后台登录用的密钥）。
+
+### Windows 客户端
+
+1. 打开本仓库 [Actions 里的 Go 工作流](https://github.com/kisukri/sleepy-go/actions/workflows/go.yml)，进入最近一次成功的运行，下载 `sleepy-client-windows`（需要登录 GitHub）。解压后，一般电脑用 `sleepy-client.exe`，ARM 版 Windows 用 `sleepy-client-arm64.exe`。
+2. 把 exe 放到一个固定的文件夹，双击运行一次。同目录下会生成 `sleepy-client.toml`，程序随即退出。
+3. 用记事本打开 `sleepy-client.toml`，填写这几项：
+
+   ```toml
+   server = "https://status.example.com"
+   secret = "你的密钥"
+   device_id = "my-pc"
+   device_name = "我的电脑"
+   ```
+
+4. 再双击一次，开始上报。程序没有窗口，运行情况可以看同目录下的 `sleepy-client.log`。
+5. 开机自启：按 `Win + R`，输入 `shell:startup`，把 exe 的快捷方式放进打开的文件夹。
+
+exe 没有签名，第一次运行可能被 SmartScreen 拦下，点“更多信息”→“仍要运行”即可。其他选项见 [clients/](clients/README.md#sleepy-clientgo-版)（日文）。
+
+### iOS 快捷指令
+
+需要 iOS 18 以上。在“快捷指令”App 里新建一个快捷指令，按顺序添加：
+
+1. **获取当前 App**
+2. **获取电池电量**（不需要显示电量可以省略）
+3. **文本**：`[`、电池电量、`%]`、当前 App 的“名称”依次拼在一起，例如 `[87%]微信`。页面会把方括号里的百分比显示为电量；写成 `[🔋87%]` 也可以，充电中可以写 `[87%⚡]`。
+4. **获取 URL 内容**：
+   - URL：`https://status.example.com/api/device/set`
+   - 方法：`POST`
+   - 头部：`Authorization`，值为 `Bearer 你的密钥`
+   - 请求体：JSON
+
+   | 键 | 类型 | 值 |
+   | --- | --- | --- |
+   | `id` | 文本 | `iphone`（设备的唯一 ID） |
+   | `show_name` | 文本 | `iPhone`（页面上显示的名字） |
+   | `using` | 布尔值 | 开 |
+   | `status` | 文本 | 第 3 步的“文本” |
+
+手动运行一次，页面上出现这台设备就说明成功了。之后在“自动化”→“App”里选中所有 App，选“已打开”和“立即运行”，再指定这个快捷指令，以后每打开一个 App 都会自动上报。
+
+地址要用 `https://`。用 `http://` 时密钥会明文传输，反向代理跳转到 HTTPS 时还可能把 POST 变成 GET，或者丢掉请求头。
 
 ## 项目结构
 

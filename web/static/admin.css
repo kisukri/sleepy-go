@@ -132,11 +132,14 @@ body.pn-body {
 }
 .pn-dev-row {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
     align-items: center;
     gap: 13px;
     padding: 5px 0;
 }
+.pn-order { display: flex; }
+.pn-order .pn-more { width: 30px; font-size: 15px; }
+.pn-order .pn-more:disabled { visibility: hidden; }
 .pn-dev-main { min-width: 0; }
 .pn-dev-name { font-weight: 500; overflow-wrap: anywhere; }
 .pn-dev-sub {

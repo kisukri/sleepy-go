@@ -443,3 +443,39 @@ func TestOldPanelRedirects(t *testing.T) {
 		}
 	}
 }
+
+func TestDeviceOrder(t *testing.T) {
+	s, _ := testApp(t)
+	for _, id := range []string{"a", "b", "c"} {
+		requireCode(t, call(t, s, "POST", "/api/device/set", map[string]any{"id": id, "show_name": id, "using": true}, true), 200)
+	}
+	order := func() string {
+		var data struct{ Order []string }
+		json.Unmarshal(call(t, s, "GET", "/api/status/query", nil, false).Body.Bytes(), &data)
+		return strings.Join(data.Order, ",")
+	}
+	if got := order(); got != "" {
+		t.Fatalf("order before sorting = %q", got)
+	}
+	requireCode(t, call(t, s, "POST", "/api/device/order", map[string]any{"order": []string{"c", "a"}}, false), 401)
+	requireCode(t, call(t, s, "POST", "/api/device/order", map[string]any{"order": []string{"c", "missing"}}, true), 400)
+	requireCode(t, call(t, s, "POST", "/api/device/order", map[string]any{"order": []string{"c", "c"}}, true), 400)
+	requireCode(t, call(t, s, "POST", "/api/device/order", map[string]any{"order": "c,a"}, true), 400)
+	requireCode(t, call(t, s, "POST", "/api/device/order", map[string]any{"order": []string{"c", "a"}}, true), 200)
+	if got := order(); got != "c,a" {
+		t.Fatalf("order = %q", got)
+	}
+	requireCode(t, call(t, s, "POST", "/api/device/private?private=true", nil, true), 200)
+	if got := order(); got != "" {
+		t.Fatalf("private mode leaks order %q", got)
+	}
+	requireCode(t, call(t, s, "POST", "/api/device/private?private=false", nil, true), 200)
+	requireCode(t, call(t, s, "POST", "/api/device/remove?id=c", nil, true), 200)
+	if got := order(); got != "a" {
+		t.Fatalf("order after remove = %q", got)
+	}
+	requireCode(t, call(t, s, "POST", "/api/device/set", map[string]any{"id": "c", "show_name": "c"}, true), 200)
+	if got := order(); got != "a" {
+		t.Fatalf("re-added device kept its old place: %q", got)
+	}
+}

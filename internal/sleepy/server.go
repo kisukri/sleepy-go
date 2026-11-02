@@ -288,6 +288,7 @@ func (s *Server) routes() {
 			return writeJSON(w, 200, map[string]any{"success": true, "code": "OK", "message": "Secret verified"})
 		})
 	}
+	s.route("POST /api/device/order", s.setOrder)
 	s.route("GET /admin", func(w http.ResponseWriter, r *http.Request) error {
 		if err := s.authorize(r, false); err != nil {
 			http.Redirect(w, r, "/admin/login", 302)
@@ -321,7 +322,7 @@ func (s *Server) routes() {
 			return err
 		}
 		snap, _ := s.store.snapshot()
-		return writeJSON(w, 200, map[string]any{"success": true, "status": s.status(snap.Status), "private_mode": snap.Private, "devices": snap.Devices, "last_updated": snap.Updated})
+		return writeJSON(w, 200, map[string]any{"success": true, "status": s.status(snap.Status), "private_mode": snap.Private, "devices": snap.Devices, "order": orderOf(snap, true), "last_updated": snap.Updated})
 	})
 	if s.c.enabled("custom_text") {
 		s.route("GET /plugin/custom_text/text", func(w http.ResponseWriter, r *http.Request) error {
@@ -409,7 +410,15 @@ func (s *Server) query(snap Snapshot, legacy bool) map[string]any {
 		status := s.status(snap.Status)
 		return map[string]any{"success": true, "time": time.Now().In(loc).Format("2006-01-02 15:04:05"), "timezone": s.c.Main.Timezone, "status": snap.Status, "info": map[string]any{"name": status.Name, "desc": status.Desc, "color": status.Color}, "device": devices, "last_updated": time.UnixMicro(int64(snap.Updated * 1e6)).In(loc).Format("2006-01-02 15:04:05"), "refresh": s.c.Status.RefreshInterval, "device_status_slice": s.c.Status.DeviceSlice}
 	}
-	return map[string]any{"success": true, "time": nowSeconds(), "status": s.status(snap.Status), "device": devices, "last_updated": snap.Updated}
+	return map[string]any{"success": true, "time": nowSeconds(), "status": s.status(snap.Status), "device": devices, "order": orderOf(snap, false), "last_updated": snap.Updated}
+}
+
+// private mode hides the order too, it would leak device ids
+func orderOf(snap Snapshot, admin bool) []string {
+	if snap.Order == nil || (snap.Private && !admin) {
+		return []string{}
+	}
+	return snap.Order
 }
 func (s *Server) statusList(w http.ResponseWriter, r *http.Request) error {
 	if s.isLegacy(r.URL.Path) {
@@ -596,6 +605,28 @@ func (s *Server) clearDevices(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	if err := s.store.deleteDevice("", true); err != nil {
+		return err
+	}
+	return s.success(w, r, nil)
+}
+func (s *Server) setOrder(w http.ResponseWriter, r *http.Request) error {
+	if err := s.authorize(r, true); err != nil {
+		return err
+	}
+	raw, ok := body(r)["order"]
+	var ids []string
+	if !ok || json.Unmarshal(raw, &ids) != nil {
+		return apiError{400, "order must be a list of device ids"}
+	}
+	snap, _ := s.store.snapshot()
+	seen := map[string]bool{}
+	for _, id := range ids {
+		if _, ok := snap.Devices[id]; !ok || seen[id] {
+			return apiError{400, "unknown or repeated device id: " + id}
+		}
+		seen[id] = true
+	}
+	if err := s.store.setOrder(ids); err != nil {
 		return err
 	}
 	return s.success(w, r, nil)

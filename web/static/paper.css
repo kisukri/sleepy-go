@@ -293,19 +293,19 @@ body.sl-home-body {
 }
 .sl-item {
     display: grid;
-    grid-template-columns: 1.3em minmax(0, 1fr) auto;
+    grid-template-columns: 1.618em minmax(0, 1fr) auto;
     column-gap: 13px;
     align-items: baseline;
 }
 .sl-ico {
-    align-self: start;
-    padding-top: 2px;
+    grid-row: 1 / span 2;
+    align-self: center;
     color: var(--sl-muted);
 }
 .sl-ico svg {
     display: block;
-    width: 1.2em;
-    height: 1.2em;
+    width: 1.618em;
+    height: 1.618em;
 }
 .sl-app {
     font-weight: 500;
@@ -358,9 +358,6 @@ body.sl-home-body {
     font-family: var(--sl-serif);
     font-size: var(--fs-b);
     color: var(--sl-soft);
-}
-.sl-zone {
-    margin-left: 8px;
 }
 .sl-foot-r {
     display: inline-flex;

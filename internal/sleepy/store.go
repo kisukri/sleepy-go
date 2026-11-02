@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -28,6 +29,7 @@ type Snapshot struct {
 	Private bool
 	Updated float64
 	Devices map[string]Device
+	Order   []string
 }
 type Store struct {
 	mu      sync.RWMutex
@@ -70,6 +72,7 @@ func openStore(c Config) (*Store, error) {
 		`PRAGMA busy_timeout=5000`,
 		`CREATE TABLE IF NOT EXISTS main (id INTEGER PRIMARY KEY, status INTEGER NOT NULL DEFAULT 0, private_mode BOOLEAN NOT NULL DEFAULT 0, last_updated FLOAT)`,
 		`CREATE TABLE IF NOT EXISTS device_status (id VARCHAR(1024) PRIMARY KEY, show_name VARCHAR(1024) NOT NULL, "using" BOOLEAN, status TEXT, fields JSON NOT NULL DEFAULT '{}', last_updated FLOAT)`,
+		`CREATE TABLE IF NOT EXISTS device_order (id VARCHAR(1024) PRIMARY KEY, position INTEGER NOT NULL)`,
 	} {
 		if _, err = db.Exec(q); err != nil {
 			return fail(err)
@@ -129,6 +132,23 @@ func (s *Store) reload() error {
 	if err = rows.Err(); err != nil {
 		return err
 	}
+	order, err := s.db.Query(`SELECT id FROM device_order ORDER BY position`)
+	if err != nil {
+		return err
+	}
+	defer order.Close()
+	for order.Next() {
+		var id string
+		if err = order.Scan(&id); err != nil {
+			return err
+		}
+		if _, ok := state.Devices[id]; ok {
+			state.Order = append(state.Order, id)
+		}
+	}
+	if err = order.Err(); err != nil {
+		return err
+	}
 	s.state = state
 	return nil
 }
@@ -186,11 +206,33 @@ func (s *Store) setPrivate(value bool) error {
 func (s *Store) deleteDevice(id string, all bool) error {
 	return s.write(func(tx *sql.Tx) error {
 		if all {
+			if _, err := tx.Exec(`DELETE FROM device_order`); err != nil {
+				return err
+			}
 			_, err := tx.Exec(`DELETE FROM device_status`)
+			return err
+		}
+		if _, err := tx.Exec(`DELETE FROM device_order WHERE id=?`, id); err != nil {
 			return err
 		}
 		_, e := tx.Exec(`DELETE FROM device_status WHERE id=?`, id)
 		return e
+	})
+}
+func (s *Store) setOrder(ids []string) error {
+	return s.write(func(tx *sql.Tx) error {
+		if slices.Equal(s.state.Order, ids) {
+			return errNoChange
+		}
+		if _, err := tx.Exec(`DELETE FROM device_order`); err != nil {
+			return err
+		}
+		for i, id := range ids {
+			if _, err := tx.Exec(`INSERT INTO device_order (id,position) VALUES (?,?)`, id, i); err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 }
 

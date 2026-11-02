@@ -65,6 +65,7 @@ CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "-H=windowsg
 | `idle_minutes` | `15` | 何分操作がなければ「未使用」にするか |
 | `battery` | `true` | バッテリー残量をタイトルの前に付けるか |
 | `app_first` | `false` | `ファイル名 - アプリ名` を `アプリ名 - ファイル名` の順に入れ替えるか |
+| `app_only` | `false` | ウィンドウのタイトルではなくアプリ名（例：`Microsoft Edge`）だけを送るか。開いているタブやファイル名を公開したくないときに使います |
 | `skip_titles` | `[]` | 無視するウィンドウタイトルの追加分（直前のタイトルを維持します） |
 | `not_using_titles` | `[]` | 「未使用」とみなすウィンドウタイトルの追加分 |
 

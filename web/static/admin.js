@@ -23,8 +23,13 @@ export function toast(msg, isError = false) {
 }
 window.slToast = toast;
 
-async function api(url, write = false) {
-    const resp = await fetch(url, { method: write ? 'POST' : 'GET', credentials: 'same-origin', cache: 'no-store' });
+async function api(url, write = false, payload) {
+    const opts = { method: write ? 'POST' : 'GET', credentials: 'same-origin', cache: 'no-store' };
+    if (payload) {
+        opts.headers = { 'Content-Type': 'application/json' };
+        opts.body = JSON.stringify(payload);
+    }
+    const resp = await fetch(url, opts);
     if (resp.status === 401) {
         location.href = '/admin/login';
         throw new Error(t('expired'));
@@ -96,9 +101,25 @@ function drawDevices() {
     }
     const now = Date.now();
     const devices = Object.entries(panel.devices || {}).map(([id, d]) => ({ id, ...d }));
-    devices.sort((a, b) => (b.using === true) - (a.using === true) || (b.last_updated || 0) - (a.last_updated || 0));
+    const rank = new Map((panel.order || []).map((id, i) => [id, i]));
+    devices.sort((a, b) =>
+        (rank.get(a.id) ?? Infinity) - (rank.get(b.id) ?? Infinity) ||
+        (b.using === true) - (a.using === true) ||
+        (b.last_updated || 0) - (a.last_updated || 0));
 
-    devList.replaceChildren(...devices.map((d) => {
+    const move = async (i, step) => {
+        const ids = devices.map((d) => d.id);
+        [ids[i], ids[i + step]] = [ids[i + step], ids[i]];
+        try {
+            await api('/api/device/order', true, { order: ids });
+            panel.order = ids;
+        } catch (e) {
+            toast(t('order_failed', { err: e.message }), true);
+        }
+        drawDevices();
+    };
+
+    devList.replaceChildren(...devices.map((d, i) => {
         const li = document.createElement('li');
         li.className = 'pn-dev';
         const row = document.createElement('div');
@@ -128,7 +149,20 @@ function drawDevices() {
         more.setAttribute('aria-label', t('more_actions', { name: d.show_name || d.id }));
         more.setAttribute('aria-expanded', String(openMenus.has(d.id)));
 
-        row.append(dot, main, more);
+        const order = document.createElement('span');
+        order.className = 'pn-order';
+        for (const [step, label, key] of [[-1, '↑', 'move_up'], [1, '↓', 'move_down']]) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'pn-more';
+            btn.textContent = label;
+            btn.setAttribute('aria-label', t(key, { name: d.show_name || d.id }));
+            btn.disabled = !devices[i + step];
+            btn.addEventListener('click', () => move(i, step));
+            order.append(btn);
+        }
+
+        row.append(dot, main, order, more);
         li.append(row);
 
         if (openMenus.has(d.id)) {

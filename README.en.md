@@ -6,7 +6,7 @@ A lightweight personal status page: it shows your current status (online / offli
 
 ## Features
 
-- **Status page**: a quiet, spacious design showing your manual status, the devices, apps, battery and music in use, and your local time, with a light / dark toggle.
+- **Status page**: a quiet, spacious design showing your manual status, the devices, apps, battery and music in use, and the visitor's local time (device order is set in the admin page), with a light / dark toggle.
 - **Japanese, Chinese, English**: pick the UI language with `page.language` (default `ja`).
 - **Live updates**: Server-Sent Events with automatic reconnect; returning to the tab on a phone refreshes immediately.
 - **Admin panel**: switch status, manage devices, privacy mode, and edit the page text by clicking it in a live preview (random lines and variables supported).
@@ -113,6 +113,50 @@ Precedence, low to high: defaults → `data/.env` / environment → `data/config
 See [`clients/`](clients/README.md) (Japanese): on Windows the Go client is recommended (one exe, no Python; reports window, idle, battery and sends heartbeats); there are also Python and PowerShell clients and Linux (KDE, Hyprland) scripts; iOS/iPadOS can use a Shortcut. Configure the server URL, secret, device ID and display name to start reporting.
 
 New clients should POST JSON to `/api/device/set` with `Authorization: Bearer <secret>`. See the [API reference](docs/api.md) (Japanese).
+
+For the clients below, "secret" means `main.device_secret` if you set one, otherwise `main.secret` (the one you log in to the admin page with).
+
+### Windows client
+
+1. Open the [Go workflow under Actions](https://github.com/kisukri/sleepy-go/actions/workflows/go.yml), pick the latest successful run and download `sleepy-client-windows` (you need to be signed in to GitHub). Unzip it and use `sleepy-client.exe`, or `sleepy-client-arm64.exe` on ARM Windows.
+2. Put the exe in a folder where it will stay and double-click it once. It writes `sleepy-client.toml` next to itself and exits.
+3. Open `sleepy-client.toml` in Notepad and fill in:
+
+   ```toml
+   server = "https://status.example.com"
+   secret = "your secret"
+   device_id = "my-pc"
+   device_name = "My PC"
+   ```
+
+4. Double-click it again to start reporting. It has no window; check `sleepy-client.log` in the same folder to see what it is doing.
+5. Start with Windows: press `Win + R`, open `shell:startup` and put a shortcut to the exe there.
+
+The exe is unsigned, so SmartScreen may stop it the first time; choose "More info" → "Run anyway". Other options are in [clients/](clients/README.md#sleepy-clientgo-版) (Japanese).
+
+### iOS Shortcut
+
+Needs iOS 18 or later. Create a new shortcut in the Shortcuts app and add these actions in order:
+
+1. **Get Current App**
+2. **Get Battery Level** (skip it if you don't want the battery shown)
+3. **Text**: `[`, the battery level, `%]` and the app's Name, e.g. `[87%]Safari`. The page shows the percentage in brackets as the battery level; `[🔋87%]` works too, and `[87%⚡]` marks it as charging.
+4. **Get Contents of URL**:
+   - URL: `https://status.example.com/api/device/set`
+   - Method: `POST`
+   - Headers: `Authorization` with the value `Bearer your-secret`
+   - Request Body: JSON
+
+   | Key | Type | Value |
+   | --- | --- | --- |
+   | `id` | Text | `iphone` (a unique ID for the device) |
+   | `show_name` | Text | `iPhone` (the name shown on the page) |
+   | `using` | Boolean | on |
+   | `status` | Text | the Text from step 3 |
+
+Run it once by hand; if the device shows up on the page, it works. Then go to Automation → App, select all apps, choose "Is Opened" and "Run Immediately", and pick this shortcut so it reports every time you open an app.
+
+Use `https://`. Over `http://` the secret is sent in plain text, and when a reverse proxy redirects to HTTPS the POST can turn into a GET or lose its headers.
 
 ## Layout
 
