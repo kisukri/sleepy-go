@@ -20,13 +20,13 @@ async function login() {
     btn.disabled = true;
     error.style.display = 'none';
     try {
-        const resp = await fetch('/panel/auth', {
+        const resp = await fetch('/admin/auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ secret })
         });
         if (resp.ok) {
-            location.href = '/panel';
+            location.href = '/admin';
             return;
         }
         showError(resp.status === 401 ? t('login_wrong') : t('login_failed', resp.status));
@@ -38,9 +38,9 @@ async function login() {
 
 async function init() {
     try {
-        const resp = await fetch('/panel/verify', { credentials: 'include', cache: 'no-cache' });
+        const resp = await fetch('/admin/verify', { credentials: 'include', cache: 'no-cache' });
         if (resp.ok) {
-            location.href = '/panel';
+            location.href = '/admin';
             return;
         }
     } catch (e) {

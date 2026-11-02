@@ -42,7 +42,7 @@ export sleepy_page_name='あなたの名前'
 
 - `/api/meta`、`/api/status/query`、`/api/status/list`、`/api/status/events`
 - `/api/status/set`、`/api/device/set`、`/api/device/remove`、`/api/device/clear`、`/api/device/private`
-- `/panel`、`/panel/login`、`/panel/auth`、`/panel/logout`、`/panel/verify`、`/panel/data`
+- `/admin`、`/admin/login`、`/admin/auth`、`/admin/logout`、`/admin/verify`、`/admin/data`（旧 `/panel`、`/panel/login` は `/admin` に転送）
 - `/plugin/custom_text/text`（文言エディターのファイルは `/assets/<内容のハッシュ>/editor/…`）
 - V4 互換を有効にしている場合は `/query`、`/events`、`/set`、`/status_list`、`/device/set`、`/device/remove`、`/device/clear`、`/device/private_mode`、`/save_data`
 

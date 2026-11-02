@@ -208,6 +208,6 @@ func (s *Server) logout(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 	clearSession(w)
-	http.Redirect(w, r, "/panel/login", http.StatusSeeOther)
+	http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
 	return nil
 }

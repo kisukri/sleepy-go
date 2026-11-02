@@ -87,8 +87,8 @@ func TestDevicePrivacyAndRestart(t *testing.T) {
 	if len(public["device"].(map[string]any)) != 0 {
 		t.Fatal("privacy leak")
 	}
-	requireCode(t, call(t, s, "GET", "/panel/data", nil, false), 401)
-	panel := object(t, call(t, s, "GET", "/panel/data", nil, true))
+	requireCode(t, call(t, s, "GET", "/admin/data", nil, false), 401)
+	panel := object(t, call(t, s, "GET", "/admin/data", nil, true))
 	if len(panel["devices"].(map[string]any)) != 1 {
 		t.Fatal("admin cannot see private device")
 	}
@@ -115,7 +115,7 @@ func TestValidationAndRollback(t *testing.T) {
 		{"/api/status/set?status=-1", nil, 400}, {"/api/status/set?status=99", nil, 400},
 		{"/api/device/set", map[string]any{"id": "missing-name"}, 400},
 		{"/api/device/set", map[string]any{"id": "pc", "show_name": "电脑", "using": "maybe"}, 400},
-		{"/panel/auth", []string{"not-an-object"}, 400},
+		{"/admin/auth", []string{"not-an-object"}, 400},
 		{"/plugin/custom_text/text", map[string]any{"text": map[string]any{"page": "wrong"}}, 400},
 	} {
 		requireCode(t, call(t, s, "POST", tc.path, tc.payload, true), tc.code)
@@ -127,7 +127,7 @@ func TestValidationAndRollback(t *testing.T) {
 }
 func TestSessionAndCSRF(t *testing.T) {
 	s, _ := testApp(t)
-	w := call(t, s, "POST", "/panel/auth", map[string]any{"secret": "test-secret"}, false)
+	w := call(t, s, "POST", "/admin/auth", map[string]any{"secret": "test-secret"}, false)
 	requireCode(t, w, 200)
 	cookies := w.Result().Cookies()
 	if len(cookies) != 1 || !cookies[0].HttpOnly || strings.Contains(cookies[0].Value, "test-secret") {
@@ -143,13 +143,13 @@ func TestSessionAndCSRF(t *testing.T) {
 		s.ServeHTTP(w, r)
 		return w
 	}
-	requireCode(t, send("GET", "/panel/data", ""), 200)
+	requireCode(t, send("GET", "/admin/data", ""), 200)
 	requireCode(t, send("GET", "/api/device/clear", ""), 403)
 	requireCode(t, send("POST", "/api/status/set?status=1", "https://attacker.invalid"), 403)
 	requireCode(t, send("POST", "/api/status/set?status=1", "http://example.com"), 200)
 	requireCode(t, call(t, s, "GET", "/api/status/set?status=0&secret=test-secret", nil, false), 200)
 	cookies[0].Value += "tamper"
-	requireCode(t, send("GET", "/panel/data", ""), 401)
+	requireCode(t, send("GET", "/admin/data", ""), 401)
 }
 func TestTextSanitizationAndPersistence(t *testing.T) {
 	s, _ := testApp(t)
@@ -177,7 +177,7 @@ func TestTextSanitizationAndPersistence(t *testing.T) {
 }
 func TestEmbeddedFilesAndPublicIsolation(t *testing.T) {
 	s, c := testApp(t)
-	for _, path := range []string{"/", "/panel/login", "/static-themed/paper/paper.js", "/static-themed/paper/render.js", s.assets + "/static/paper.js", s.assets + "/editor/editor.js", "/favicon.ico"} {
+	for _, path := range []string{"/", "/admin/login", "/static-themed/paper/paper.js", "/static-themed/paper/render.js", s.assets + "/static/paper.js", s.assets + "/editor/editor.js", "/favicon.ico"} {
 		first := call(t, s, "GET", path, nil, false)
 		second := call(t, s, "GET", path, nil, false)
 		requireCode(t, first, 200)
@@ -329,18 +329,18 @@ func TestLoginWithCookieJar(t *testing.T) {
 	defer server.Close()
 	jar, _ := cookiejar.New(nil)
 	client := &http.Client{Jar: jar, Timeout: time.Second}
-	response, err := client.Post(server.URL+"/panel/auth", "application/json", strings.NewReader(`{"secret":"test-secret"}`))
+	response, err := client.Post(server.URL+"/admin/auth", "application/json", strings.NewReader(`{"secret":"test-secret"}`))
 	if err != nil {
 		t.Fatal(err)
 	}
 	response.Body.Close()
-	response, err = client.Get(server.URL + "/panel")
+	response, err = client.Get(server.URL + "/admin")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer response.Body.Close()
 	data, _ := io.ReadAll(response.Body)
-	if response.StatusCode != 200 || !bytes.Contains(data, []byte("ad-status")) {
+	if response.StatusCode != 200 || !bytes.Contains(data, []byte("pn-status")) {
 		t.Fatal("admin page unavailable")
 	}
 }
@@ -401,12 +401,12 @@ func TestInternalErrorsAndBodyLimits(t *testing.T) {
 	if strings.Contains(w.Body.String(), "private diagnostic") {
 		t.Fatal("internal error leaked")
 	}
-	r := httptest.NewRequest("POST", "/panel/auth", strings.NewReader(`{"secret":"`+strings.Repeat("a", 1<<20)+`"}`))
+	r := httptest.NewRequest("POST", "/admin/auth", strings.NewReader(`{"secret":"`+strings.Repeat("a", 1<<20)+`"}`))
 	r.Header.Set("Content-Type", "application/json")
 	w = httptest.NewRecorder()
 	s.ServeHTTP(w, r)
 	requireCode(t, w, 413)
-	r = httptest.NewRequest("POST", "/panel/auth", strings.NewReader(`{} {}`))
+	r = httptest.NewRequest("POST", "/admin/auth", strings.NewReader(`{} {}`))
 	r.Header.Set("Content-Type", "application/json")
 	w = httptest.NewRecorder()
 	s.ServeHTTP(w, r)
@@ -415,14 +415,14 @@ func TestInternalErrorsAndBodyLimits(t *testing.T) {
 }
 func TestPageLanguage(t *testing.T) {
 	s, _ := testApp(t)
-	for _, path := range []string{"/", "/panel/login"} {
+	for _, path := range []string{"/", "/admin/login"} {
 		html := call(t, s, "GET", path, nil, false).Body.String()
 		if !strings.Contains(html, `<html lang="ja"`) || !strings.Contains(html, `id="sl-words"`) || !strings.Contains(html, "接続しています") && path == "/" {
 			t.Fatalf("%s: ja page missing lang or words", path)
 		}
 	}
 	s.c.Page.Language = "zh"
-	html := call(t, s, "GET", "/panel/login", nil, false).Body.String()
+	html := call(t, s, "GET", "/admin/login", nil, false).Body.String()
 	if !strings.Contains(html, `<html lang="zh-CN"`) || !strings.Contains(html, "登录管理") {
 		t.Fatal("zh login page")
 	}
@@ -430,5 +430,16 @@ func TestPageLanguage(t *testing.T) {
 	requireCode(t, w, 200)
 	if w.Header().Get("Content-Type") != "font/woff2" {
 		t.Fatalf("font type %q", w.Header().Get("Content-Type"))
+	}
+}
+
+func TestOldPanelRedirects(t *testing.T) {
+	s, _ := testApp(t)
+	for old, want := range map[string]string{"/panel": "/admin", "/panel/login": "/admin/login"} {
+		w := call(t, s, "GET", old, nil, false)
+		requireCode(t, w, 301)
+		if got := w.Header().Get("Location"); got != want {
+			t.Fatalf("%s redirects to %q", old, got)
+		}
 	}
 }

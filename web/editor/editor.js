@@ -431,7 +431,7 @@ function setScene(v) {
 }
 
 async function loadData() {
-    let r = await fetch('/panel/data', { credentials: 'same-origin', cache: 'no-store' });
+    let r = await fetch('/admin/data', { credentials: 'same-origin', cache: 'no-store' });
     if (r.ok) {
         const p = await r.json();
         return { success: true, status: p.status, device: p.devices, last_updated: p.last_updated };

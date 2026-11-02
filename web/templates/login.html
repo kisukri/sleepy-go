@@ -8,18 +8,18 @@
     <link rel="stylesheet" href="{{.Assets}}/static/admin.css">
 </head>
 
-<body class="ad-body" data-use-modern-auth="true">
-    <main class="sl-page ad-login">
-        <p class="ad-who">{{.Name}}</p>
-        <h1 class="ad-title">{{.T.login_title}}</h1>
-        <div id="loading-message"><p class="ad-mute">{{.T.login_check}}</p></div>
+<body class="pn-body" data-use-modern-auth="true">
+    <main class="sl-page pn-login">
+        <p class="pn-who">{{.Name}}</p>
+        <h1 class="pn-title">{{.T.login_title}}</h1>
+        <div id="loading-message"><p class="pn-mute">{{.T.login_check}}</p></div>
         <form class="login-form" style="display: none" onsubmit="return false">
-            <label for="secret" class="ad-label">{{.T.login_secret}}</label>
-            <input type="password" id="secret" class="ad-input" autocomplete="current-password" placeholder="{{.T.login_ph}}" autofocus>
-            <p id="error-message" class="ad-error" role="alert"></p>
-            <button type="button" class="ad-btn ad-btn-dark login-btn">{{.T.login_btn}}</button>
+            <label for="secret" class="pn-label">{{.T.login_secret}}</label>
+            <input type="password" id="secret" class="pn-input" autocomplete="current-password" placeholder="{{.T.login_ph}}" autofocus>
+            <p id="error-message" class="pn-error" role="alert"></p>
+            <button type="button" class="pn-btn pn-btn-dark login-btn">{{.T.login_btn}}</button>
         </form>
-        <a href="/" class="ad-back">{{.T.login_back}}</a>
+        <a href="/" class="pn-back">{{.T.login_back}}</a>
     </main>
     <script id="sl-words" type="application/json">{{.Words}}</script>
     <script src="{{.Assets}}/static/login.js"></script>

@@ -2,12 +2,12 @@ import { parseApp, ago, DEFAULT_TEXT, statusDefaults } from './render.js';
 import { t, bindTheme } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
-const statusBox = $('ad-status');
-const devList = $('ad-devices');
-const devEmpty = $('ad-dev-empty');
-const clearBtn = $('ad-clear');
-const privateBox = $('ad-private');
-const toastBox = $('ad-toast');
+const statusBox = $('pn-status');
+const devList = $('pn-devices');
+const devEmpty = $('pn-dev-empty');
+const clearBtn = $('pn-clear');
+const privateBox = $('pn-private');
+const toastBox = $('pn-toast');
 
 let statusList = [];
 let textOverrides = {};
@@ -26,7 +26,7 @@ window.slToast = toast;
 async function api(url, write = false) {
     const resp = await fetch(url, { method: write ? 'POST' : 'GET', credentials: 'same-origin', cache: 'no-store' });
     if (resp.status === 401) {
-        location.href = '/panel/login';
+        location.href = '/admin/login';
         throw new Error(t('expired'));
     }
     const data = await resp.json();
@@ -100,21 +100,21 @@ function drawDevices() {
 
     devList.replaceChildren(...devices.map((d) => {
         const li = document.createElement('li');
-        li.className = 'ad-dev';
+        li.className = 'pn-dev';
         const row = document.createElement('div');
-        row.className = 'ad-dev-row';
+        row.className = 'pn-dev-row';
 
         const dot = document.createElement('span');
         dot.className = 'sl-dot';
         dot.dataset.color = d.using ? 'green' : 'grey';
 
         const main = document.createElement('div');
-        main.className = 'ad-dev-main';
+        main.className = 'pn-dev-main';
         const name = document.createElement('div');
-        name.className = 'ad-dev-name';
+        name.className = 'pn-dev-name';
         name.textContent = d.show_name || d.id;
         const sub = document.createElement('div');
-        sub.className = 'ad-dev-sub';
+        sub.className = 'pn-dev-sub';
         const parsed = parseApp(d.status);
         const what = d.using ? (parsed.app || t('in_use')) : t('not_in_use');
         sub.textContent = `${what} · ${ago(d.last_updated, now, DEFAULT_TEXT.time)}`;
@@ -123,7 +123,7 @@ function drawDevices() {
 
         const more = document.createElement('button');
         more.type = 'button';
-        more.className = 'ad-more';
+        more.className = 'pn-more';
         more.textContent = '⋯';
         more.setAttribute('aria-label', t('more_actions', { name: d.show_name || d.id }));
         more.setAttribute('aria-expanded', String(openMenus.has(d.id)));
@@ -133,7 +133,7 @@ function drawDevices() {
 
         if (openMenus.has(d.id)) {
             const act = document.createElement('div');
-            act.className = 'ad-dev-actions';
+            act.className = 'pn-dev-actions';
             const idInfo = document.createElement('span');
             idInfo.append(t('device_id'));
             const code = document.createElement('code');
@@ -141,7 +141,7 @@ function drawDevices() {
             idInfo.append(code);
             const del = document.createElement('button');
             del.type = 'button';
-            del.className = 'ad-danger-link';
+            del.className = 'pn-danger-link';
             del.textContent = t('dev_delete');
             armed(del, t('dev_delete'), t('confirm_delete'), async () => {
                 try {
@@ -193,7 +193,7 @@ privateBox.addEventListener('change', async () => {
 });
 
 async function reload() {
-    panel = await api('/panel/data');
+    panel = await api('/admin/data');
     privateBox.checked = !!panel.private_mode;
     drawStatus();
     drawDevices();
@@ -232,5 +232,5 @@ async function init() {
 }
 
 init().catch((e) => {
-    statusBox.replaceChildren(Object.assign(document.createElement('p'), { className: 'ad-mute', textContent: t('load_failed', { err: e.message }) }));
+    statusBox.replaceChildren(Object.assign(document.createElement('p'), { className: 'pn-mute', textContent: t('load_failed', { err: e.message }) }));
 });

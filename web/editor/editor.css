@@ -253,7 +253,7 @@ body.ct-lock { overflow: hidden; }
 
 .ct-chips .ct-chip-more { color: var(--sl-muted); background: var(--sl-line); }
 
-body.ct-lock .ad-toast,
+body.ct-lock .pn-toast,
 body.ct-lock .ct-toast {
     bottom: auto;
     top: max(20px, env(safe-area-inset-top, 0px));

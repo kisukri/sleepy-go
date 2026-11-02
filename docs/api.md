@@ -13,7 +13,7 @@
 
 `main.device_secret` を設定すると、そのシークレットはデバイス情報の送信（`/api/device/set`、`/device/set`）にしか使えなくなります。それ以外の書き込み API や管理画面へのログインには `main.secret` が必要で、デバイス用シークレットでは 403 になります。`main.allowed_hosts` を設定した場合、リストにない Host へのリクエストには 421 を返します。
 
-ブラウザの管理画面は、ログイン後に `sleepy-session` という HttpOnly Cookie を使います。Cookie だけでは GET による書き込みはできず、管理画面からの書き込みは同一オリジンの POST に限られます。`/panel/data` は認証が必要で、公開側のプライバシーモードに関係なく、常にすべてのデバイス情報を返します。
+ブラウザの管理画面は、ログイン後に `sleepy-session` という HttpOnly Cookie を使います。Cookie だけでは GET による書き込みはできず、管理画面からの書き込みは同一オリジンの POST に限られます。`/admin/data` は認証が必要で、公開側のプライバシーモードに関係なく、常にすべてのデバイス情報を返します。
 
 ## 状態とデバイス
 
@@ -28,7 +28,7 @@
 | POST / GET | `/api/device/remove` | `id`：デバイス ID | 必要 |
 | POST / GET | `/api/device/clear` | すべてのデバイスを削除 | 必要 |
 | POST / GET | `/api/device/private` | `private=true/false`：公開側のプライバシーモード | 必要 |
-| GET | `/panel/data` | 管理用。状態、全デバイス、プライバシーモード、更新時刻 | 必要 |
+| GET | `/admin/data` | 管理用。状態、全デバイス、プライバシーモード、更新時刻 | 必要 |
 | GET | `/none` | 204 を返すだけの死活監視用 | 不要 |
 
 GET で書き込むには、シークレットを明示的に付ける必要があります（ブラウザの Cookie だけでは不可）。デバイスの JSON オブジェクト以外でも、POST では表にあるクエリパラメータをそのまま使えます。
@@ -86,10 +86,10 @@ data: {"success":true,...}
 
 | メソッド | パス | 動作 |
 | --- | --- | --- |
-| POST | `/panel/auth` | シークレットを確認してセッション Cookie を発行 |
-| GET / POST | `/panel/verify` | 今のセッション、またはシークレットが有効か確認 |
-| POST | `/panel/logout` | 管理画面の「ログアウト」ボタンが使います。同一オリジンからのリクエストならセッションの署名鍵を作り直し、ログイン中のすべてのブラウザを無効にしてからログイン画面に移ります |
-| GET | `/panel/logout` | このブラウザのセッション Cookie だけを削除してログイン画面に移ります |
+| POST | `/admin/auth` | シークレットを確認してセッション Cookie を発行 |
+| GET / POST | `/admin/verify` | 今のセッション、またはシークレットが有効か確認 |
+| POST | `/admin/logout` | 管理画面の「ログアウト」ボタンが使います。同一オリジンからのリクエストならセッションの署名鍵を作り直し、ログイン中のすべてのブラウザを無効にしてからログイン画面に移ります |
+| GET | `/admin/logout` | このブラウザのセッション Cookie だけを削除してログイン画面に移ります |
 | GET | `/plugin/custom_text/text` | 公開用の文言設定と `more_text` |
 | POST | `/plugin/custom_text/text` | `{"text": {...}}` を保存します（認証が必要） |
 

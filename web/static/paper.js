@@ -21,6 +21,26 @@ function readJson(id) {
     }
 }
 
+// light / dark pairs, same as the --sl-* colors in paper.css
+const ICON_COLORS = {
+    green: ['#2f9583', '#5ec1ac'],
+    grey: ['#a3adb9', '#5d6979'],
+    amber: ['#b7862a', '#d6a64e'],
+    red: ['#c2554d', '#e07a70'],
+    blue: ['#4a77b4', '#7aa3dc']
+};
+const iconLink = document.querySelector('link[rel="icon"]');
+let iconColor = '';
+
+function setIcon(color) {
+    if (!iconLink || color === iconColor) return;
+    iconColor = color;
+    const [light, dark] = ICON_COLORS[color] || ICON_COLORS.green;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><style>circle{fill:${light}}@media(prefers-color-scheme:dark){circle{fill:${dark}}}</style><circle cx="8" cy="8" r="6"/></svg>`;
+    iconLink.type = 'image/svg+xml';
+    iconLink.href = 'data:image/svg+xml,' + encodeURIComponent(svg);
+}
+
 function draw() {
     if (!lastData || !meta) {
         const c = root.querySelector('.sl-conn');
@@ -30,6 +50,7 @@ function draw() {
     const view = buildView({ data: lastData, meta, overrides, moreText });
     render(root, view, conn);
     document.title = view.title;
+    setIcon(view.color);
 }
 
 function setConn(state, n) {
@@ -158,5 +179,6 @@ setTimeout(() => root.querySelectorAll('.sl-pending').forEach((n) => n.classList
 
 setInterval(draw, 15000);
 bindTheme(document.getElementById('sl-theme'));
+setIcon(root.querySelector('.sl-dot')?.dataset.color || 'green');
 
 start();

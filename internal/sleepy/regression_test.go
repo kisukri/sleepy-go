@@ -190,7 +190,7 @@ func TestUnchangedWritesKeepLastUpdated(t *testing.T) {
 
 func loginCookie(t *testing.T, s *Server) *http.Cookie {
 	t.Helper()
-	r := httptest.NewRequest("POST", "/panel/auth", strings.NewReader(`{"secret":"test-secret"}`))
+	r := httptest.NewRequest("POST", "/admin/auth", strings.NewReader(`{"secret":"test-secret"}`))
 	r.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	s.ServeHTTP(w, r)
@@ -217,12 +217,12 @@ func TestLogoutEndsAllSessions(t *testing.T) {
 	s, c := testApp(t)
 	cookie := loginCookie(t, s)
 	copied := *cookie
-	r := httptest.NewRequest("POST", "/panel/logout", nil)
+	r := httptest.NewRequest("POST", "/admin/logout", nil)
 	r.AddCookie(cookie)
 	w := httptest.NewRecorder()
 	s.ServeHTTP(w, r)
 	requireCode(t, w, 303)
-	check := httptest.NewRequest("GET", "/panel/data", nil)
+	check := httptest.NewRequest("GET", "/admin/data", nil)
 	check.AddCookie(&copied)
 	w = httptest.NewRecorder()
 	s.ServeHTTP(w, check)
@@ -237,7 +237,7 @@ func TestLogoutEndsAllSessions(t *testing.T) {
 	}
 
 	fresh := loginCookie(t, s)
-	r = httptest.NewRequest("POST", "/panel/logout", nil)
+	r = httptest.NewRequest("POST", "/admin/logout", nil)
 	r.Header.Set("Origin", "https://evil.example")
 	r.AddCookie(fresh)
 	s.ServeHTTP(httptest.NewRecorder(), r)

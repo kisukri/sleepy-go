@@ -118,7 +118,7 @@ finish_msg() {
 	if [ "${LISTEN:-}" = "127.0.0.1" ]; then
 		echo "Sleepy Go: http://127.0.0.1:${PORT}/ (local only - point your reverse proxy here, see deploy/examples/)"
 	else
-		echo "Sleepy Go: http://<server-ip>:${PORT}/   admin: http://<server-ip>:${PORT}/panel"
+		echo "Sleepy Go: http://<server-ip>:${PORT}/   admin: http://<server-ip>:${PORT}/admin"
 	fi
 	echo "Directory: ${INSTALL_DIR}"
 	echo "Update:    bash ${INSTALL_DIR}/deploy/install.sh"

@@ -281,36 +281,42 @@ func (s *Server) routes() {
 		s.route(method+" /api/device/remove", s.removeDevice)
 		s.route(method+" /api/device/clear", s.clearDevices)
 		s.route(method+" /api/device/private", s.setPrivate)
-		s.route(method+" /panel/verify", func(w http.ResponseWriter, r *http.Request) error {
+		s.route(method+" /admin/verify", func(w http.ResponseWriter, r *http.Request) error {
 			if err := s.authorize(r, false); err != nil {
 				return err
 			}
 			return writeJSON(w, 200, map[string]any{"success": true, "code": "OK", "message": "Secret verified"})
 		})
 	}
-	s.route("GET /panel", func(w http.ResponseWriter, r *http.Request) error {
+	s.route("GET /admin", func(w http.ResponseWriter, r *http.Request) error {
 		if err := s.authorize(r, false); err != nil {
-			http.Redirect(w, r, "/panel/login", 302)
+			http.Redirect(w, r, "/admin/login", 302)
 			return nil
 		}
 		return s.page(w, "panel.html")
 	})
-	s.route("GET /panel/login", func(w http.ResponseWriter, r *http.Request) error {
+	s.route("GET /admin/login", func(w http.ResponseWriter, r *http.Request) error {
 		if s.sessionOK(r) {
-			http.Redirect(w, r, "/panel", 302)
+			http.Redirect(w, r, "/admin", 302)
 			return nil
 		}
 		return s.page(w, "login.html")
 	})
-	s.route("POST /panel/auth", s.login)
+	for _, old := range []string{"/panel", "/panel/login"} {
+		s.route("GET "+old, func(w http.ResponseWriter, r *http.Request) error {
+			http.Redirect(w, r, "/admin"+strings.TrimPrefix(old, "/panel"), http.StatusMovedPermanently)
+			return nil
+		})
+	}
+	s.route("POST /admin/auth", s.login)
 
-	s.route("GET /panel/logout", func(w http.ResponseWriter, r *http.Request) error {
+	s.route("GET /admin/logout", func(w http.ResponseWriter, r *http.Request) error {
 		clearSession(w)
-		http.Redirect(w, r, "/panel/login", 302)
+		http.Redirect(w, r, "/admin/login", 302)
 		return nil
 	})
-	s.route("POST /panel/logout", s.logout)
-	s.route("GET /panel/data", func(w http.ResponseWriter, r *http.Request) error {
+	s.route("POST /admin/logout", s.logout)
+	s.route("GET /admin/data", func(w http.ResponseWriter, r *http.Request) error {
 		if err := s.authorize(r, false); err != nil {
 			return err
 		}
