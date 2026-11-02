@@ -1,0 +1,23 @@
+# cp -> data/config.yaml. empty secret = won't start
+main:
+  host: 127.0.0.1
+  port: 9010
+  secret: ""
+  device_secret: ""          # devices only, != secret
+  allow_query_secret: true   # false once nothing uses ?secret=
+  allowed_hosts: []          # e.g. [status.example.com]
+  timezone: Asia/Shanghai
+page:
+  name: User
+  title: User's status
+  theme: paper
+  language: ja   # ja / zh / en: UI text + default status names
+plugins_enabled:
+  - v4_compatible
+  - custom_text
+#  - auto_dead   # only w/ periodic heartbeats
+# plugin:
+#   auto_dead:
+#     check_interval: 60
+#     timeout_minutes: 15
+#     dead_status_id: 1

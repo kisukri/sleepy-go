@@ -1,0 +1,17 @@
+# Runtime data and local configuration (never commit secrets or databases)
+data/
+.env
+*.db
+
+# Local deployment files written by deploy/install.sh
+/docker-compose.yml
+/docker-compose.yml.failed
+/compose.yaml
+
+# Go build outputs
+/bin/
+/coverage.out
+
+# Editors
+.vscode/
+.idea/

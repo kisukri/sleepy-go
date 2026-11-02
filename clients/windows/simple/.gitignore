@@ -1,0 +1,5 @@
+# client Win_Simple
+build/
+*.spec
+dist/config.ini
+dist/*.exe

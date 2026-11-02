@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="{{.Lang}}" class="sl-html">
+
+<head>
+    {{template "head-common" .}}
+    <title>{{.Title}}</title>
+    <meta name="description" content="{{.Desc}}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="{{.Title}}">
+    <link rel="apple-touch-icon" href="{{.Favicon}}">
+    <noscript><style>.sl-pending { opacity: 1 !important; }</style></noscript>
+</head>
+
+<body class="sl-home-body">
+    <main class="sl-page sl-home">
+        {{template "theme-btn" .}}
+        <div id="sl-root" class="sl-root">
+            {{template "main-card" .}}
+        </div>
+    </main>
+    <template id="sl-more-text">{{.MoreText}}</template>
+
+    <script id="sl-words" type="application/json">{{.Words}}</script>
+    {{if .CustomText}}<script id="sleepy-text" type="application/json">{{.TextJSON}}</script>{{end}}
+    <script type="module" src="{{.Assets}}/static/paper.js"></script>
+</body>
+
+</html>

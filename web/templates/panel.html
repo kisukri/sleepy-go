@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="{{.Lang}}" class="sl-html sl-admin-html">
+
+<head>
+    {{template "head-common" .}}
+    <title>{{.Name}} · {{.T.admin}}</title>
+    <meta name="robots" content="noindex">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="{{.Name}}">
+    <link rel="apple-touch-icon" href="{{.Favicon}}">
+    <link rel="stylesheet" href="{{.Assets}}/static/admin.css">
+</head>
+
+<body class="ad-body">
+    <div class="ad-page">
+        <header class="ad-top">
+            <div>
+                <p class="ad-who">{{.Name}}</p>
+                <h1 class="ad-title">{{.T.admin}}</h1>
+            </div>
+            <nav class="ad-nav">
+                <a href="/">{{.T.admin_view}}</a>
+                <form method="post" action="/panel/logout" class="ad-logout"><button type="submit">{{.T.admin_logout}}</button></form>
+                {{template "theme-btn" .}}
+            </nav>
+        </header>
+
+        <section class="ad-sec" aria-labelledby="ad-status-h">
+            <h2 class="ad-label" id="ad-status-h">{{.T.admin_status}}</h2>
+            <div class="ad-status" id="ad-status"><p class="ad-mute">{{.T.loading}}</p></div>
+        </section>
+
+        <section class="ad-sec" aria-labelledby="ad-dev-h">
+            <h2 class="ad-label" id="ad-dev-h">{{.T.admin_devices}}</h2>
+            <ul class="ad-devices" id="ad-devices"></ul>
+            <p class="ad-empty ad-mute" id="ad-dev-empty" hidden>{{.T.dev_empty}}</p>
+            <button type="button" class="ad-danger-link" id="ad-clear" hidden>{{.T.dev_clear}}</button>
+        </section>
+
+        <section class="ad-sec">
+            <label class="ad-toggle" for="ad-private">
+                <span>
+                    <b>{{.T.private}}</b>
+                    <small>{{.T.private_hint}}</small>
+                </span>
+                <input type="checkbox" id="ad-private" role="switch">
+                <i aria-hidden="true"></i>
+            </label>
+        </section>
+
+        {{if .CustomText}}<section class="ad-sec ad-plugin" id="custom-text">
+<h2 class="ad-label">{{.T.admin_text}}</h2><link rel="stylesheet" href="{{.Assets}}/editor/editor.css">
+<div id="ct-root"><p class="ad-mute">{{.T.loading}}</p></div><script type="module" src="{{.Assets}}/editor/editor.js"></script></section>{{end}}
+    </div>
+
+    <div class="ad-toast" id="ad-toast" role="status" aria-live="polite" hidden></div>
+
+    <script id="sl-words" type="application/json">{{.Words}}</script>
+    {{if .CustomText}}<script id="sleepy-text" type="application/json">{{.TextJSON}}</script>{{end}}
+    <script type="module" src="{{.Assets}}/static/admin.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,7 @@
+# Optional. Caddy gets the HTTPS certificate by itself.
+# Install Sleepy with: LISTEN=127.0.0.1 ALLOWED_HOSTS=status.example.com
+# Replace the domain, then reload Caddy.
+
+status.example.com {
+	reverse_proxy 127.0.0.1:9010
+}

@@ -1,0 +1,16 @@
+services:
+  sleepy-go:
+    build:
+      context: ..
+      dockerfile: deploy/docker/Dockerfile
+    ports:
+      - "9010:9010"
+    # = owner of ../data
+    user: "${SLEEPY_UID:-1000}:${SLEEPY_GID:-1000}"
+    volumes:
+      - ../data:/sleepy/data
+    restart: unless-stopped
+    environment:
+      sleepy_main_host: 0.0.0.0
+      sleepy_main_secret: "${SLEEPY_MAIN_SECRET:?Set SLEEPY_MAIN_SECRET before starting}"
+      sleepy_page_name: "${SLEEPY_PAGE_NAME:-Sleepy}"
